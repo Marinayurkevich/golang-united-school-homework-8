@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
 )
 
@@ -63,7 +66,33 @@ func parseArgs() Arguments {
 }
 
 func add(args Arguments, writer io.Writer) error {
+	file, err := os.OpenFile("fileName", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
 
+	var item Users
+	err = json.Unmarshal([]byte(args["item"]), &item)
+	if err != nil {
+		return err
+	}
+	var people []Users
+	for _, value := range people {
+		if value.Id == item.Id {
+			errors.New("Item with this Id is already existed")
+		}
+		people = append(people, item)
+	}
+	jsonPeople, err := json.Marshal(people)
+
+	_, err = file.Write(jsonPeople)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
