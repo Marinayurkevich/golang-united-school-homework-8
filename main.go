@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -70,34 +71,60 @@ func add(args Arguments, writer io.Writer) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = ioutil.ReadAll(file)
+	db, err := ioutil.ReadAll(file)
 	if err != nil {
 		return err
 	}
 
-	var item Users
-	err = json.Unmarshal([]byte(args["item"]), &item)
+	var person Users
+	err = json.Unmarshal([]byte(args["item"]), &person)
 	if err != nil {
 		return err
 	}
 	var people []Users
-	for _, value := range people {
-		if value.Id == item.Id {
-			errors.New("Item with this Id is already existed")
-		}
-		people = append(people, item)
+	if len(db) > 0 {
+		err = json.Unmarshal(db, &people)
 	}
-	jsonPeople, err := json.Marshal(people)
 
-	_, err = file.Write(jsonPeople)
-	if err != nil {
-		return err
+	for _, value := range people {
+		if value.Id == person.Id {
+			TextError := fmt.Sprintf("Item with id %s already exists", person.Id)
+			_, err = writer.Write([]byte(TextError))
+			if err != nil {
+				return err
+			}
+			people = append(people, person)
+		}
+		jsonPeople, err := json.Marshal(people)
+
+		_, err = file.Write(jsonPeople)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func list(args Arguments, writer io.Writer) error {
-
+	file, err := os.OpenFile("fileName", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	filedata, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	var people []Users
+	if len(filedata) > 0 {
+		err = json.Unmarshal(filedata, &people)
+		if err != nil {
+			return err
+		}
+	}
+	_, err = json.Marshal(people)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
