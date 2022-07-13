@@ -29,9 +29,6 @@ func Perform(args Arguments, writer io.Writer) error {
 	if args["item"] == "" {
 		return errors.New("-item flag has to be specified")
 	}
-	if args["id"] == "" {
-		return errors.New("-id flag has to be specified")
-	}
 	switch args["operation"] {
 	case "add":
 		return add(args, writer)
@@ -67,7 +64,7 @@ func parseArgs() Arguments {
 }
 
 func add(args Arguments, writer io.Writer) error {
-	file, err := os.OpenFile("fileName", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -84,6 +81,7 @@ func add(args Arguments, writer io.Writer) error {
 	var people []Users
 	if len(db) > 0 {
 		err = json.Unmarshal(db, &people)
+		fmt.Println(err)
 	}
 
 	for _, value := range people {
@@ -106,7 +104,7 @@ func add(args Arguments, writer io.Writer) error {
 }
 
 func list(args Arguments, writer io.Writer) error {
-	file, err := os.OpenFile("fileName", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -115,20 +113,7 @@ func list(args Arguments, writer io.Writer) error {
 		return err
 	}
 
-	var people []Users
-	if len(db) > 0 {
-		err = json.Unmarshal(db, &people)
-		if err != nil {
-			return err
-		}
-	}
-	_, err = json.Marshal(people)
-	if err != nil {
-		return err
-	}
-	jsonPeople, err := json.Marshal(people)
-
-	_, err = file.Write(jsonPeople)
+	_, err = writer.Write(db)
 	if err != nil {
 		return err
 	}
@@ -136,7 +121,9 @@ func list(args Arguments, writer io.Writer) error {
 }
 
 func findById(args Arguments, writer io.Writer) error {
-
+	if args["id"] == "" {
+		return errors.New("-id flag has to be specified")
+	}
 	return nil
 }
 
