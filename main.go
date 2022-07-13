@@ -26,9 +26,6 @@ func Perform(args Arguments, writer io.Writer) error {
 	if args["operation"] == "" {
 		return errors.New("-operation flag has to be specified")
 	}
-	if args["item"] == "" {
-		return errors.New("-item flag has to be specified")
-	}
 	switch args["operation"] {
 	case "add":
 		return add(args, writer)
@@ -64,7 +61,10 @@ func parseArgs() Arguments {
 }
 
 func add(args Arguments, writer io.Writer) error {
-	file, err := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0755)
+	if args["item"] == "" {
+		return errors.New("-item flag has to be specified")
+	}
+	file, err := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
