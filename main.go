@@ -110,18 +110,25 @@ func list(args Arguments, writer io.Writer) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	filedata, err := ioutil.ReadAll(file)
+	db, err := ioutil.ReadAll(file)
 	if err != nil {
 		return err
 	}
+
 	var people []Users
-	if len(filedata) > 0 {
-		err = json.Unmarshal(filedata, &people)
+	if len(db) > 0 {
+		err = json.Unmarshal(db, &people)
 		if err != nil {
 			return err
 		}
 	}
 	_, err = json.Marshal(people)
+	if err != nil {
+		return err
+	}
+	jsonPeople, err := json.Marshal(people)
+
+	_, err = file.Write(jsonPeople)
 	if err != nil {
 		return err
 	}
