@@ -124,10 +124,48 @@ func findById(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
 		return errors.New("-id flag has to be specified")
 	}
+
 	return nil
 }
 
 func remove(args Arguments, writer io.Writer) error {
+	if args["id"] == "" {
+		return errors.New("-id flag has to be specified")
+	}
+	file, err := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
 
+	var people []Users
+	if len(db) > 0 {
+		err = json.Unmarshal(db, &people)
+		fmt.Println(err)
+	}
+
+	for key, value := range people {
+		if value.Id == args["id"] {
+			people = append(people[:key], people[key+1:]...)
+		}
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+	TextError := fmt.Sprintf("Item with id %s not found", args["id"])
+	_, err = writer.Write([]byte(TextError))
+	if err != nil {
+		return err
+	}
+	jsonPeople, err := json.Marshal(people)
+
+	_, err = file.Write(jsonPeople)
+	if err != nil {
+		return err
+	}
 	return nil
 }
