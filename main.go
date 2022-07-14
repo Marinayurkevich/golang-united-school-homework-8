@@ -35,6 +35,8 @@ func Perform(args Arguments, writer io.Writer) error {
 		return findById(args, writer)
 	case "remove":
 		return remove(args, writer)
+	default:
+		return fmt.Errorf("Operation %s not allowed!", args["operation"])
 	}
 	return nil
 }
@@ -122,6 +124,7 @@ func list(args Arguments, writer io.Writer) error {
 func findById(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
 		return errors.New("-id flag has to be specified")
+
 	}
 
 	return nil
@@ -139,10 +142,23 @@ func remove(args Arguments, writer io.Writer) error {
 	if err != nil {
 		return err
 	}
-
+	var person Users
+	err = json.Unmarshal([]byte(args["item"]), &person)
+	if err != nil {
+		return err
+	}
 	var people []Users
 	if len(db) > 0 {
 		err = json.Unmarshal(db, &people)
+	}
+	for _, value := range people {
+		if value.Id == person.Id {
+			TextError := fmt.Sprintf("Item with id %s not found", args["id"])
+			_, err = writer.Write([]byte(TextError))
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	for key, value := range people {
@@ -161,11 +177,6 @@ func remove(args Arguments, writer io.Writer) error {
 		return err
 	}
 
-	TextError := fmt.Sprintf("Item with id %s not found", args["id"])
-	_, err = writer.Write([]byte(TextError))
-	if err != nil {
-		return err
-	}
 	jsonPeople, err := json.Marshal(people)
 
 	_, err = file.Write(jsonPeople)
