@@ -38,7 +38,6 @@ func Perform(args Arguments, writer io.Writer) error {
 	default:
 		return fmt.Errorf("Operation %s not allowed!", args["operation"])
 	}
-	return nil
 }
 
 func main() {
@@ -80,9 +79,18 @@ func add(args Arguments, writer io.Writer) error {
 	if err != nil {
 		return err
 	}
+
 	var people []Users
-	if len(db) > 0 {
-		err = json.Unmarshal(db, &people)
+	err = json.Unmarshal(db, &people)
+
+	if len(db) == 0 {
+		people = append(people, person)
+		jsonPeople, err := json.Marshal(people)
+		_, err = file.Write(jsonPeople)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 
 	for _, value := range people {
@@ -124,7 +132,32 @@ func list(args Arguments, writer io.Writer) error {
 func findById(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
 		return errors.New("-id flag has to be specified")
-
+	}
+	file, err := os.OpenFile(args["fileName"], os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	var person Users
+	err = json.Unmarshal([]byte(args["item"]), &person)
+	if err != nil {
+		return err
+	}
+	var people []Users
+	if len(db) > 0 {
+		err = json.Unmarshal(db, &people)
+	}
+	for _, value := range people {
+		if value.Id == person.Id {
+			TextError := fmt.Sprintf("Item with id %s not found", args["id"])
+			_, err = writer.Write([]byte(TextError))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -155,12 +188,11 @@ func remove(args Arguments, writer io.Writer) error {
 		if value.Id == person.Id {
 			TextError := fmt.Sprintf("Item with id %s not found", args["id"])
 			_, err = writer.Write([]byte(TextError))
-		}
-		if err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 	}
-
 	for key, value := range people {
 		if value.Id == args["id"] {
 			people = append(people[:key], people[key+1:]...)
