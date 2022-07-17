@@ -129,6 +129,7 @@ func list(args Arguments, writer io.Writer) error {
 	return nil
 }
 
+/*
 func findById(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
 		return errors.New("-id flag has to be specified")
@@ -161,7 +162,7 @@ func findById(args Arguments, writer io.Writer) error {
 	}
 
 	return nil
-}
+}*/
 
 func remove(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
@@ -184,34 +185,39 @@ func remove(args Arguments, writer io.Writer) error {
 	if len(db) > 0 {
 		err = json.Unmarshal(db, &people)
 	}
-	for _, value := range people {
-		if value.Id == person.Id {
-			TextError := fmt.Sprintf("Item with id %s not found", args["id"])
-			_, err = writer.Write([]byte(TextError))
-			if err != nil {
-				return err
-			}
-		}
-	}
+
+	err = json.Unmarshal(db, &people)
+
 	for key, value := range people {
 		if value.Id == args["id"] {
 			people = append(people[:key], people[key+1:]...)
-			break
+
+			jsonPeople, err := json.Marshal(people)
+			if err != nil {
+				return err
+			}
+
+			err = file.Truncate(0)
+			if err != nil {
+				return err
+			}
+
+			_, err = file.Seek(0, 0)
+			if err != nil {
+				return err
+			}
+
+			_, err = file.Write(jsonPeople)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		}
 	}
 
-	err = file.Truncate(0)
-	if err != nil {
-		return err
-	}
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	jsonPeople, err := json.Marshal(people)
-
-	_, err = file.Write(jsonPeople)
+	TextError := fmt.Sprintf("Item with id %s not found", args["id"])
+	_, err = writer.Write([]byte(TextError))
 	if err != nil {
 		return err
 	}
