@@ -162,7 +162,8 @@ func findById(args Arguments, writer io.Writer) error {
 	}
 
 	return nil
-}*/
+}
+*/
 
 func remove(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
