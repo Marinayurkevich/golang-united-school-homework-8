@@ -129,7 +129,6 @@ func list(args Arguments, writer io.Writer) error {
 	return nil
 }
 
-/*
 func findById(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
 		return errors.New("-id flag has to be specified")
@@ -163,7 +162,6 @@ func findById(args Arguments, writer io.Writer) error {
 
 	return nil
 }
-*/
 
 func remove(args Arguments, writer io.Writer) error {
 	if args["id"] == "" {
