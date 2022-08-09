@@ -144,20 +144,11 @@ func findById(args Arguments, writer io.Writer) error {
 	if err != nil {
 		return err
 	}
-	var person Users
-	err = json.Unmarshal([]byte(args["item"]), &person)
-	if err != nil {
-		return err
-	}
 
 	var people []Users
 	err = json.Unmarshal(db, &people)
-
-	if len(db) == 0 {
-		_, err = writer.Write([]byte(""))
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
 	if len(db) > 0 {
@@ -197,11 +188,6 @@ func remove(args Arguments, writer io.Writer) error {
 			return err
 		}
 	}
-	var person Users
-	err = json.Unmarshal([]byte(args["item"]), &person)
-	if err != nil {
-		return err
-	}
 
 	var people []Users
 	err = json.Unmarshal(db, &people)
@@ -209,6 +195,14 @@ func remove(args Arguments, writer io.Writer) error {
 	if len(db) > 0 {
 		for key, value := range people {
 			if value.Id == args["id"] {
+				err = file.Truncate(0)
+				if err != nil {
+					return err
+				}
+				_, err = file.Seek(0, 0)
+				if err != nil {
+					return err
+				}
 				people = append(people[:key], people[key+1:]...)
 
 				jsonPeople, err := json.Marshal(people)
@@ -221,7 +215,11 @@ func remove(args Arguments, writer io.Writer) error {
 				}
 			}
 		}
-		return nil
+		TextError := fmt.Sprintf("Item with id %s not found", args["id"])
+		_, err = writer.Write([]byte(TextError))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
